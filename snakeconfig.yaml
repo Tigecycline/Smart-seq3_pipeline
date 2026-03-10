@@ -1,0 +1,11 @@
+dataset: VCAM1_P1
+outdir: test/output
+
+ref_genome:
+  seq: /home/ubuntu/main/Data/references/mus_musculus_GRCm39_sm/Mus_musculus.GRCm39.dna_sm.primary_assembly.fa
+  genes: /home/ubuntu/main/Data/references/mus_musculus_GRCm39_sm/annotations/Mus_musculus.GRCm39.114.gtf
+
+ilse_info:
+  45537:
+    metadata: test/45537-resultData_VCAM1_28.xlsx
+    fastqdir: /mnt/ngs/251212_VH00693_276_AAHGYFVM5_VCAM_P1+CD49f_D124+/251212_VH00693_276_AAHGYFVM5
