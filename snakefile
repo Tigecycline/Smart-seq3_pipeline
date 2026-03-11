@@ -52,6 +52,7 @@ rule prepare_star_indices:
         directory(join(dirname(config['ref_genome']['seq']), 'star_indices'))
     params:
         star_args = config['star_index_args']
+    log: join(dirname(config['ref_genome']['seq']), 'star_genome_generate.log')
     threads: 24
     conda: 'envs/star.yaml'
     shell:
@@ -62,7 +63,8 @@ rule prepare_star_indices:
             --runMode genomeGenerate \
             --genomeDir {output} \
             --genomeFastaFiles {input.ref_genome} \
-            --sjdbGTFfile {input.gene_annotation}
+            --sjdbGTFfile {input.gene_annotation} \
+            2> {log}
         '''
 
 
@@ -208,6 +210,7 @@ rule all:
     output:
         join(config['outdir'], 'last_success_config.yaml')
     run:
+        from datetime import datetime
         with open(output[0], 'w') as f:
-            f.write('# These are configurations used for the most recent successful run of the pipeline.\n')
+            f.write(f'# These are configurations used for the most recent successful run of the pipeline, which was {datetime.today().isoformat(sep=' ', timespec='seconds')}.\n')
             yaml.dump(config, f, sort_keys=False)

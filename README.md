@@ -5,7 +5,8 @@ This is a pipeline to process scNMT sequencing data, intended for DKFZ A290 inte
 # Important notes
 
 - A lot of steps of the pipeline won't work on a Windows volume (e.g. the O drive). As a result, **the pipeline folder, the output directory and the reference files all need to reside on a Linux volume** (e.g. scratch). In addition, it is recommended to have no white space in any folder name or file name.
-- STAR requires around 30 GB of memory. Make sure your machine has enough memory left.
+- It is highly recommeded to use absolute paths when setting up the config file (see below).
+- STAR requires around 30 GB of RAM already for the human or mouse genome (~3 GB). Make sure your machine has enough RAM left.
 
 # Environment setup
 

@@ -1,3 +1,6 @@
+# You can copy-paste these sections to snakeconfig.yaml and modify them there
+# Any section that is in snakeconfig.yaml will overwrite the one here
+
 umiextract_args: >-
   --umilen 8
   --anchor "ATTGCGCAATG"
