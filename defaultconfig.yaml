@@ -14,7 +14,6 @@ star_index_args: >-
 star_align_args: >-
   --clip3pAdapterSeq CTGTCTCTTATACACATCT CTGTCTCTTATACACATCT
   --clip3pAdapterMMp 0.1 0.1
-  --genomeLoad LoadAndRemove
   --readFilesCommand zcat
   --outSAMtype BAM Unsorted
 

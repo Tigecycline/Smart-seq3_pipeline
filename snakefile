@@ -33,7 +33,7 @@ for ilse_id, attr in config['ilse_info'].items():
 
 
 wildcard_constraints:
-    sn = r'\w+', # sample name
+    sample = r'\w+', # sample name
     seqid = r'[0-9]+', # sequencing ID
     fqid = r'[A-Z0-9-]+' # FASTQ ID
 
@@ -130,9 +130,26 @@ rule align_to_ref:
             {params.star_args} \
             --runThreadN {threads} \
             --genomeDir {input.indices} \
+            --genomeLoad LoadAndKeep \
             --readFilesIn {input.fq_with_umi} \
             --outFileNamePrefix {params.outprefix} \
             > {log}
+        '''
+
+
+rule unload_star_genome:
+    input:
+        expand(join(config['outdir'], 'alignments/{sample}/{sample}_RNA.qn_sorted.bam'), sample=sample_to_fastq.keys())
+    output:
+        temp(touch(join(config['outdir'], 'star_genome_unloaded.flag')))
+    conda: 'envs/star.yaml'
+    params:
+        indices = rules.prepare_star_indices.output
+    shell:
+        r'''
+        STAR \
+            --genomeLoad Remove \
+            --genomeDir {params.indices}
         '''
 
 
@@ -156,9 +173,10 @@ rule parse_dump_GTF:
         'umicount -g {input} --GTF_dump {output}'
 
 
-rule count_umi_rename_columns:
+rule count_umis:
     input:
-        bams = expand(join(config['outdir'], 'alignments/{sn}/{sn}_RNA.qn_sorted.bam'), sn=sample_to_fastq.keys()),
+        rules.unload_star_genome.output,
+        bams = expand(join(config['outdir'], 'alignments/{sample}/{sample}_RNA.qn_sorted.bam'), sample=sample_to_fastq.keys()),
         gtf_dump = ancient(rules.parse_dump_GTF.output)
     output:
         multiext(join(config['outdir'], 'umicount/umite'), '.D.tsv', '.RE.tsv', '.RI.tsv', '.UE.tsv', '.UI.tsv')
@@ -176,13 +194,13 @@ rule count_umi_rename_columns:
             --GTF_skip_parse {input.gtf_dump} \
             --bams {input.bams} \
             -d {params.outdir} \
-            2> {log}
+            -l {log}
         '''
 
 
 rule rename_umicount_files:
     input:
-        rules.count_umi_rename_columns.output
+        rules.count_umis.output
     output:
         multiext(join(config['outdir'], f'umicount/{config['dataset']}_umite'), '.D.tsv', '.RE.tsv', '.RI.tsv', '.UE.tsv', '.UI.tsv')
     params:
