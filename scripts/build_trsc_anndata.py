@@ -11,7 +11,12 @@ def build_trsc_adata_from_umicount(umicount_file, parsed_gtf_pkl):
     with open(parsed_gtf_pkl, 'rb') as f:
         gene_id_to_name = {gene_id: gene_names[0] for gene_id, gene_names in pickle.load(f)[2].items()}
 
-    df.rename(gene_id_to_name, axis=1, inplace=True)    
+    # if no gene name, use gene id instead
+    for gene_id, gene_name in gene_id_to_name.items():
+        if gene_name == '':
+            gene_id_to_name[gene_id] = gene_id
+
+    df.rename(gene_id_to_name, axis=1, inplace=True)
     df = df.T.groupby(level=0).sum().T
 
     adata = ad.AnnData(df)
