@@ -1,20 +1,19 @@
+import pickle
+
 import pandas as pd
 import anndata as ad
 
-import HTSeq
 
 
 
-
-def build_trsc_adata_from_umicount(umicount_file, annotation_file=None):
+def build_trsc_adata_from_umicount(umicount_file, parsed_gtf_pkl):
     df = pd.read_csv(umicount_file, sep='\t', index_col=0)
+    with open(parsed_gtf_pkl, 'rb') as f:
+        gene_id_to_name = {gene_id: gene_names[0] for gene_id, gene_names in pickle.load(f)[2].items()}
 
-    if annotation_file is not None:
-        gtf = HTSeq.GFF_Reader(annotation_file)
-        gene_id_to_name = {feature.name: feature.attr['gene_name'] for feature in gtf if feature.type == 'gene' and 'gene_name' in feature.attr.keys()}
-        df.index = [gene_id_to_name.get(gene_id, gene_id) for gene_id in df.index]
-        df = df.loc[df.index.value_counts() == 1] # drop duplicated genes
-    
+    df.rename(gene_id_to_name, axis=1, inplace=True)    
+    df = df.T.groupby(level=0).sum().T
+
     adata = ad.AnnData(df)
     
     return adata

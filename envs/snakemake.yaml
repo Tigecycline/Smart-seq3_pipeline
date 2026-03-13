@@ -3,3 +3,5 @@ channels:
 dependencies:
   - python>=3.12
   - snakemake>=9.0
+  - xlrd>=2.0
+  - openpyxl>=3.1
