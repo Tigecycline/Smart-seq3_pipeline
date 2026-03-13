@@ -213,12 +213,12 @@ rule rename_umicount_files:
 rule build_trsc_anndata:
     input:
         join(config['outdir'], f'umicount/{config['dataset']}_umite.UE.tsv'),
-        gene_annotation = ancient(config['ref_genome']['genes'])
+        gtf_dump = ancient(rules.parse_dump_GTF.output)
     output:
         join(config['outdir'], f'{config['dataset']}_transcriptome.h5ad')
     conda: 'envs/anndata.yaml'
     shell:
-        'python3 scripts/build_trsc_anndata.py -g {input.gene_annotation} {input[0]} -o {output}'
+        'python3 scripts/build_trsc_anndata.py -g {input.gtf_dump} {input[0]} -o {output}'
 
 
 rule all:
