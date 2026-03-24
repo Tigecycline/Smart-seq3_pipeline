@@ -1,12 +1,18 @@
 # You can copy-paste these sections to snakeconfig.yaml and modify them there
 # Any section that is in snakeconfig.yaml will overwrite the one here
 
+pipeline: star_umite
+
 umiextract_args: >-
   --umilen 8
   --anchor "ATTGCGCAATG"
   --trailing "GGG"
   --search_region 30
   --fuzzy_umi
+
+umicount_args: >-
+  --mm_count_primary
+  --UMI_correct
 
 star_index_args: >-
   --limitGenomeGenerateRAM 100000000000
@@ -17,6 +23,8 @@ star_align_args: >-
   --readFilesCommand zcat
   --outSAMtype BAM Unsorted
 
-umicount_args: >-
-  --mm_count_primary
-  --UMI_correct
+salmon_index_args: >-
+  -k 31
+
+salmon_quant_args: >-
+  -l ISF

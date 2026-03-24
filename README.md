@@ -4,44 +4,35 @@ This is a pipeline to process scNMT sequencing data, intended for DKFZ A290 inte
 
 # Important notes
 
-- A lot of steps of the pipeline won't work on a Windows volume (e.g. the O drive). As a result, **the pipeline folder, the output directory and the reference files all need to reside on a Linux volume** (e.g. scratch). In addition, it is recommended to have no white space in any folder name or file name.
-- It is highly recommeded to use absolute paths when setting up the config file (see below).
-- STAR requires around 30 GB of RAM already for the human or mouse genome (~3 GB). Make sure your machine has enough RAM left.
+- A lot of steps of the pipeline have issues with the Windows filesystem (e.g. the O drive). As a result, it is recommended to have **the pipeline folder, the output directory and the reference files all on a Linux volume** (e.g. scratch). In addition, it is recommended to have no white space in any folder name or file name.
+- Paths in the config file (see below) must all be **absolute** paths.
+- Both STAR and Salmon require a significant amount of RAM (up to 10 times the size of the unzipped genome) at indexing step. **Make sure your machine has enough RAM left.**
 
-# Environment setup
+# Preparation
+## Environment setup
 
-Running the pipeline requires having the following commands available from command line.
+The pipeline assumes avaiability of the following commands.
 
 - `conda`
 - `snakemake`
 
 One way to get `conda` is to install Miniforge, following instructions on [their GitHub repo](https://github.com/conda-forge/miniforge), but feel free to choose any alternative.
 
-Once `conda` is available, create a conda environment called "snakemake" with `conda create -n snakemake`. This will be our main environment.
-
-Now you can activate the environment and install the required packages:
-
-```bash
-conda activate snakemake
-conda install snakemake pandas<2.0 xlrd openpyxl
-```
-
-Alternatively, you can use the the provided YAML file
+Once `conda` is available, create a conda environment called "snakemake" and install necessary packages, which are `snakemake`, `pandas`, `xlrd` and `openpyxl`. To ensure portability, you can use the the provided environment file:
 
 ```bash
 conda env create -n snakemake -f envs/snakemake.yaml
 ```
 
-> `pandas>=2.0` has compatibility issues so we need a lower version. `xlrd` and `openpyxl` are needed only when your metadata are `.xls` or `.xlsx`, respectively. If that is not the case, feel free to drop these.
+## Reference genome transcriptome and annotation
 
-# Reference genome and annotations
+For most popular species, these files can be downloaded from [EMSELBL](https://www.ensembl.org/index.html).
 
-Both the reference genome and gene annotations can be downloaded from [EMSELBL](https://www.ensembl.org/index.html).
-
-For mouse GRCm39 of release 115, use the following commands:
+For mouse GRCm39 release 115, use the following commands:
 
 ```bash
 curl -O https://ftp.ensembl.org/pub/release-115/fasta/mus_musculus/dna/Mus_musculus.GRCm39.dna_sm.primary_assembly.fa.gz
+curl -O https://ftp.ensembl.org/pub/release-115/fasta/mus_musculus/cdna/Mus_musculus.GRCm39.cdna.all.fa.gz
 curl -O https://ftp.ensembl.org/pub/release-115/gtf/mus_musculus/Mus_musculus.GRCm39.115.gtf.gz
 ```
 
@@ -49,12 +40,11 @@ Similarly, for human GRCh38 release 115, use:
 
 ```bash
 curl -O https://ftp.ensembl.org/pub/release-115/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa.gz
+curl -O https://ftp.ensembl.org/pub/release-115/fasta/homo_sapiens/cdna/Homo_sapiens.GRCh38.cdna.all.fa.gz
 curl -O https://ftp.ensembl.org/pub/release-115/gtf/homo_sapiens/Homo_sapiens.GRCh38.115.gtf.gz
 ```
 
-These reference files are typically gzipped (i.e. ending with `.gz`) and must be unzipped before running the pipeline. This can be done with e.g. `gzip -d [filename]` (or `gzip -dk [filename]` if you want to keep the unzipped file).
-
-# Configuration
+## Configuration
 
 The config file `snakeconfig.yaml` is where you configure the pipeline parameters.
 
@@ -62,21 +52,24 @@ The config file `snakeconfig.yaml` is where you configure the pipeline parameter
 dataset: [dataset_name]
 outdir: [path_to_output_directory]
 
-ref_genome:
-  seq: [path_to_reference_genome_fasta_file]
-  genes: [path_to_annotation_gtf_file]
+reference:
+  genome: [path_to_genome_fasta]
+  transcriptome: [path_to_transcriptome_fasta]
+  genes: [path_to_annotation_gtf_gff]
 
 ilse_info:
-  [ILSe ID]:
-    metadata: [path_to_metadata_file]
-    fastqdir: [path_to_fastq_directory]
+  metadata: [paths_to_metadata_files]
+  fastqdir: [paths_to_fastq_directories]
+
+pipeline: [pipeline_name]
 ```
 
-- `[dataset_name]`: a name given to the dataset. This will be used to name the output files, but it shouldn't have any effect on the pipeline itself.
-- `[path_to_output_directory]`: the directory where all outputs and log files will go.
-- `[path_to_reference_genome_fasta_file]`, `[path_to_annotation_gtf_file]`: path to the reference genome and gene annotation files. Again, these must be unzipped (see section above).
-- `[path_to_metadata_file]`: metadata file downloaded from ILSe website, usually in the format `[ILSe ID]-result.xls`. Remember to remove rows that do not belong to the dataset of interest.
-- `[path_to_fastq_directory]`: directory to find the raw sequenceing results, usually on the NGS drive.
+- `[dataset_name]`: name of the dataset, used to name the output files.
+- `[path_to_output_directory]`: the directory to store all outputs and log files of the pipeline.
+- `[path_to_genome_fasta]`, `[path_to_transcriptome_fasta]` (optional), `[path_to_annotation_gtf_gff]`: path to the reference genome, reference transcriptome and gene annotation files. `[path_to_transcriptome_fasta]` is required only when `[pipeline_name]` is "salmon" (see below). 
+- `[paths_to_metadata_files]`: metadata files (space_separated) downloaded from ILSe website, typically named `[ILSe ID]-result.xls`. The pipeline will identify samples by the "Sample Name" column in these metadata files, so if the same sample name appears in multiple metadata files, the pipeline will treat them as **one sample being sequenced multiple times**. Therefore, make sure that sample names are consistent across sequencing runs and remember to delete rows that do not belong to the dataset being mapped.
+- `[paths_to_fastq_directories]`: directories (space_separated) to search for the FASTQ files, usually on the NGS drive. The pipeline will search for all FASTQ IDs specified in the "Unique ID / Lane" columns of the metadata files in these directories.
+- `[pipeline_name]` (optional): the pipeline used to map the sequences, must be either "star_umite" or "salmon". Default is "star_umite".
 
 > You can add any number of ILSe IDs to the `ilse_info` section, each with a metadata field and a fastq field. The pipeline will identify samples by the "Sample Name" column in the metadata file, so if the same sample name appears in two different metadata files, the pipeline will treat them as one sample being sequenced twice. Therefore, make sure that sample names are consistent across sequencing runs.
 
@@ -95,7 +88,7 @@ conda activate snakemake
 Use the following command to run the pipeline.
 
 ```bash
-snakemake --cores 24 --sdm conda
+snakemake --cores 24 --sdm conda --keep-incomplete
 ```
 
 Change the number of cores to match your system's capabilities. For a dry run, add the `-n` flag to the end of the command.
