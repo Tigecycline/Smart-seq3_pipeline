@@ -75,6 +75,7 @@ pipeline: [pipeline_name]
 
 It is highly recommended to use absolute path for all entries in the config file, since relative paths can lead to unexpected errors.
 
+Finally, there is an experimental `tui.py` that provides a user interface to edit the file. This will require packages `textual` and `textual-dev` to run but will likely make it easier to create/edit config.
 
 # Running the pipeline
 
