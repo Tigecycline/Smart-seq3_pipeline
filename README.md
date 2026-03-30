@@ -73,13 +73,11 @@ pipeline: [pipeline_name]
 
 > You can add any number of ILSe IDs to the `ilse_info` section, each with a metadata field and a fastq field. The pipeline will identify samples by the "Sample Name" column in the metadata file, so if the same sample name appears in two different metadata files, the pipeline will treat them as one sample being sequenced twice. Therefore, make sure that sample names are consistent across sequencing runs.
 
-It is highly recommended to use absolute path for all entries in the config file, since relative paths can lead to unexpected errors.
-
 Finally, there is an experimental `tui.py` that provides a user interface to edit the file. This will require packages `textual` and `textual-dev` to run but will likely make it easier to create/edit config.
 
 # Running the pipeline
 
-Change to the directory containing the script and the activate the snakemake environment.
+Change to the directory containing the script and activate the snakemake environment.
 
 ```bash
 cd /path/to/pipeline/directory
