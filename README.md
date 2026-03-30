@@ -4,8 +4,8 @@ This is a pipeline to process scNMT sequencing data, intended for DKFZ A290 inte
 
 # Important notes
 
-- A lot of steps of the pipeline have issues with the Windows filesystem (e.g. the O drive). As a result, it is recommended to have **the pipeline folder, the output directory and the reference files all on a Linux volume** (e.g. scratch). In addition, it is recommended to have no white space in any folder name or file name.
-- Paths in the config file (see below) must all be **absolute** paths.
+- A lot of steps of the pipeline have issues with the Windows filesystem (e.g. the O drive). As a result, it is recommended to have **the pipeline folder, the output directory and the reference files all on a Linux volume** (e.g. scratch).
+- Paths in the config file (see below) must be **absolute** paths and must not contain whitespaces.
 - Both STAR and Salmon require a significant amount of RAM (up to 10 times the size of the unzipped genome) at indexing step. **Make sure your machine has enough RAM left.**
 
 # Preparation

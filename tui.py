@@ -1,4 +1,4 @@
-# ATTENTION: this code  is completely vide-coded and is experimental. It has not been thoroughly tested.
+# ATTENTION: this code is vide-coded and not thoroughly tested.
 """Textual editor for `snakeconfig.yaml`."""
 
 from __future__ import annotations
@@ -234,6 +234,7 @@ class ConfigEditor(App):
         height: auto;
         padding: 1 2;
         background: $surface;
+        content-align: center middle;
     }
     """
 
@@ -246,7 +247,7 @@ class ConfigEditor(App):
     def compose(self) -> ComposeResult:
         """Build the form from the schema."""
         with VerticalScroll(id="form"):
-            yield Static("Smart-seq3 config editor", classes="section")
+            yield Static("Smart-seq3 Config Editor", classes="section")
             if self.load_warning:
                 self.status_widget = Static(self.load_warning, id="status", classes="error")
             else:
