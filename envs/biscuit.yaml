@@ -1,0 +1,9 @@
+name: biscuit
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - biscuit
+  - trim-galore
+  - dupsifter=1.3
+  - samtools=1.23

@@ -45,7 +45,7 @@ rule summarize_quants:
         quant_dirs = expand(rules.salmon_quantify.output, sample=sample_to_fqid.keys()),
         gtf = ancient(config['reference']['genes'])
     output:
-        join(config['outdir'], f'{config["dataset"]}_transcript_counts.h5ad')
+        join(config['outdir'], f'{config["dataset"]}.salmon.h5ad')
     conda: '../envs/anndata.yaml'
     shell:
         r'python3 scripts/summarize_salmon_quants.py -g {input.gtf} {input.quant_dirs} -o {output}'

@@ -180,7 +180,7 @@ rule build_trsc_anndata:
         join(config['outdir'], 'umicount/umite.UE.tsv'),
         gtf_dump = ancient(rules.parse_dump_GTF.output)
     output:
-        join(config['outdir'], f'{config['dataset']}_transcript_counts.h5ad')
+        join(config['outdir'], f'{config['dataset']}.star_umite.h5ad')
     params:
         filename_prefix = config['dataset'],
         samplename_suffix = '_Aligned.qn_sorted.bam'

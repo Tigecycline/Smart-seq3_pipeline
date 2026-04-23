@@ -1,0 +1,8 @@
+name: methscan
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip=25.2
+  - pip:
+      - methscan==1.1.0

@@ -17,7 +17,7 @@ from textual.widgets import Button, Input, Select, Static
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_PATH = BASE_DIR / "snakeconfig.yaml"
-PIPELINES = ("star_umite", "salmon")
+PIPELINES = ("star_umite", "salmon", "biscuit_methscan")
 
 
 class FieldValidationError(Exception):
@@ -40,7 +40,7 @@ FIELD_SPECS = (
     FieldSpec(
         "pipeline",
         "Pipeline",
-        "star_umite or salmon",
+        "star_umite, salmon or biscuit_methscan",
         "choice",
         "Core",
     ),

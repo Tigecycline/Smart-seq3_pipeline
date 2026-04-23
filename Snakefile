@@ -4,7 +4,7 @@ min_version('9.0')
 
 # Python libraries to be used
 from collections import defaultdict
-from os.path import dirname, join
+from os.path import dirname, basename, join
 import re
 
 import pandas as pd
@@ -22,7 +22,7 @@ for section in ('dataset', 'reference', 'outdir', 'ilse_info'):
     if section not in config:
         raise ValueError(f'No "{section}" section found in config file')
 
-if config['pipeline'] not in ('star_umite', 'salmon'):
+if config['pipeline'] not in ('star_umite', 'salmon', 'biscuit_methscan'):
     raise ValueError(f'Unexpected pipeline {config['pipeline']}')
 
 # for subsection in ('genome', 'genes'):
@@ -78,12 +78,15 @@ for metadata in config['ilse_info']['metadata']:
 
 
 # fetch rules according to specified pipeline
-if config['pipeline'] == 'star_umite':
-    include: 'modules/star_umite.smk'
-elif config['pipeline'] == 'salmon':
-    include: 'modules/salmon.smk'
-else:
-    raise ValueError(f'Invalid pipeline name "{config['pipeline']}"')
+include: f'modules/{config['pipeline']}.smk'
+# if config['pipeline'] == 'star_umite':
+#     include: 'modules/star_umite.smk'
+# elif config['pipeline'] == 'salmon':
+#     include: 'modules/salmon.smk'
+# elif config['pipeline'] == 'biscuit_methscan':
+#     include: 'modules/biscuit_methscan.smk'
+# else:
+#     raise ValueError(f'Invalid pipeline name "{config['pipeline']}"')
 
 
 # constrain wildcards
@@ -95,7 +98,8 @@ wildcard_constraints:
 rule all:
     default_target: True
     input:
-        join(config['outdir'], f'{config["dataset"]}_transcript_counts.h5ad')
+        #expand(rules.extract_methylation.output, sample='A1')
+        join(config['outdir'], f'{config['dataset']}.{config['pipeline']}.h5ad')
     run:
         # if pipeline successfully finishes, write config to outdir
         from datetime import datetime
