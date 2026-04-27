@@ -12,7 +12,7 @@ rule prepare_biscuit_index:
     output:
         directory(join(dirname(config['reference']['genome']), 'biscuit_index'))
     params:
-        prefix = join(dirname(config['reference']['genome']), 'biscuit_index', basename(config['reference']['genome']).strip('.gz').strip('.bgz'))
+        prefix = join(dirname(config['reference']['genome']), 'biscuit_index', basename(config['reference']['genome']).removesuffix('.gz').removesuffix('.bgz'))
     conda: '../envs/biscuit.yaml'
     shell:
         'biscuit index {input} -p {params.prefix}'
