@@ -1,4 +1,4 @@
-This is a pipeline to process scNMT sequencing data, intended for DKFZ A290 internal use.
+This repo contains a collection of pipelines to process scNMT sequencing data, intended for DKFZ A290 internal use.
 
 
 
@@ -69,7 +69,7 @@ pipeline: [pipeline_name]
 - `[path_to_genome_fasta]`, `[path_to_transcriptome_fasta]` (optional), `[path_to_annotation_gtf_gff]`: path to the reference genome, reference transcriptome and gene annotation files. `[path_to_transcriptome_fasta]` is required only when `[pipeline_name]` is "salmon" (see below). 
 - `[paths_to_metadata_files]`: metadata files (space_separated) downloaded from ILSe website, typically named `[ILSe ID]-result.xls`. The pipeline will identify samples by the "Sample Name" column in these metadata files, so if the same sample name appears in multiple metadata files, the pipeline will treat them as **one sample being sequenced multiple times**. Therefore, make sure that sample names are consistent across sequencing runs and remember to delete rows that do not belong to the dataset being mapped.
 - `[paths_to_fastq_directories]`: directories (space_separated) to search for the FASTQ files, usually on the NGS drive. The pipeline will search for all FASTQ IDs specified in the "Unique ID / Lane" columns of the metadata files in these directories.
-- `[pipeline_name]` (optional): the pipeline used to map the sequences, must be either "star_umite" or "salmon". Default is "star_umite".
+- `[pipeline_name]`: the pipeline used to map the sequences, possible options are "star_umite", "salmon" or "biscuit_methscan".
 
 > You can add any number of ILSe IDs to the `ilse_info` section, each with a metadata field and a fastq field. The pipeline will identify samples by the "Sample Name" column in the metadata file, so if the same sample name appears in two different metadata files, the pipeline will treat them as one sample being sequenced twice. Therefore, make sure that sample names are consistent across sequencing runs.
 
