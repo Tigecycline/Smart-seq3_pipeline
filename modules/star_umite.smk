@@ -1,3 +1,4 @@
+import glob
 rule prepare_star_indices:
     input:
         ref_genome = ancient(config['reference']['genome']),
@@ -22,6 +23,66 @@ rule prepare_star_indices:
             2> {log}
         '''
 
+rule fix_gtf_exon_ids:
+    input:
+        gtf = config['reference']['genes']
+    output:
+        gtf = join(config['outdir'], 'reference', 'genes_with_exon_id.gtf')
+    run:
+        import os
+
+        os.makedirs(os.path.dirname(output.gtf), exist_ok=True)
+
+        processed_lines = []
+
+        with open(input.gtf) as f:
+            lines = f.readlines()
+
+        for line in lines:
+
+            if line.startswith("#"):
+                processed_lines.append(line)
+                continue
+
+            fields = line.strip().split("\t")
+
+            if len(fields) < 9:
+                processed_lines.append(line)
+                continue
+
+            if fields[2] != "exon":
+                processed_lines.append(line)
+                continue
+
+            attrs = fields[8]
+            attr_dict = {}
+
+            for item in attrs.split(";"):
+                item = item.strip()
+                if not item:
+                    continue
+
+                parts = item.split(" ", 1)
+                if len(parts) == 2:
+                    key = parts[0]
+                    value = parts[1].strip('"')
+                    attr_dict[key] = value
+
+            if "exon_id" not in attr_dict:
+                if "transcript_id" in attr_dict and "exon_number" in attr_dict:
+                    attr_dict["exon_id"] = (
+                        attr_dict["transcript_id"] + "_" + attr_dict["exon_number"]
+                    )
+
+            new_attrs = "; ".join(
+                f'{k} "{v}"' for k, v in attr_dict.items()
+            ) + ";"
+
+            fields[8] = new_attrs
+            processed_lines.append("\t".join(fields) + "\n")
+
+        with open(output.gtf, "w") as f:
+            f.writelines(processed_lines)
 
 # rule link_fastq_files:
 #     # so that umiextract produces the desired filename
