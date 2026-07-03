@@ -36,8 +36,8 @@ config['ilse_info']['metadata'] = config['ilse_info']['metadata'].split()
 config['ilse_info']['fastqdir'] = config['ilse_info']['fastqdir'].split()
 
 if not config['ilse_info']['metadata']:
-    raise ValueError('No metadat file path provided')
-if not config['ilse_info']['metadata']:
+    raise ValueError('No metadata file path provided')
+if not config['ilse_info']['fastqdir']:
     raise ValueError('No FASTQ search directory provided')
 
 paths_to_check = config['ilse_info']['metadata'] + config['ilse_info']['fastqdir']
@@ -57,6 +57,8 @@ for metadata in config['ilse_info']['metadata']:
         df_ilse = pd.read_excel(metadata, index_col='Sample Name', dtype=str)
     elif metadata_ext == '.csv':
         df_ilse = pd.read_csv(metadata, index_col='Sample Name', dtype=str)
+    elif metadata_ext == '.tsv':
+        df_ilse = pd.read_csv(metadata, sep='\t', index_col='Sample Name', dtype=str)
     else:
         raise ValueError(f'Unexpected metadata extension "{metadata_ext}".')
 
