@@ -1,27 +1,3 @@
-rule prepare_star_indices:
-    input:
-        ref_genome = ancient(config['reference']['genome']),
-        gene_annotation = ancient(rules.fix_gtf_exon_ids.output.gtf)
-    output:
-        # use specified star index directory if available, otherwise default to a subdirectory next to genome fasta
-        directory(join(dirname(config['reference']['genome']), 'star_index'))
-    params:
-        star_args = config['star_index_args']
-    log: join(dirname(config['reference']['genome']), 'star_genome_generate.log')
-    threads: workflow.cores
-    conda: '../envs/star.yaml'
-    shell:
-        r'''
-        STAR \
-            {params.star_args} \
-            --runThreadN {threads} \
-            --runMode genomeGenerate \
-            --genomeDir {output} \
-            --genomeFastaFiles {input.ref_genome} \
-            --sjdbGTFfile {input.gene_annotation} \
-            2> {log}
-        '''
-
 rule fix_gtf_exon_ids:
     input:
         gtf = config['reference']['genes']
@@ -82,6 +58,31 @@ rule fix_gtf_exon_ids:
 
         with open(output.gtf, "w") as f:
             f.writelines(processed_lines)
+
+rule prepare_star_indices:
+    input:
+        ref_genome = ancient(config['reference']['genome']),
+        gene_annotation = ancient(rules.fix_gtf_exon_ids.output.gtf)
+    output:
+        # use specified star index directory if available, otherwise default to a subdirectory next to genome fasta
+        directory(join(dirname(config['reference']['genome']), 'star_index'))
+    params:
+        star_args = config['star_index_args']
+    log: join(dirname(config['reference']['genome']), 'star_genome_generate.log')
+    threads: workflow.cores
+    conda: '../envs/star.yaml'
+    shell:
+        r'''
+        STAR \
+            {params.star_args} \
+            --runThreadN {threads} \
+            --runMode genomeGenerate \
+            --genomeDir {output} \
+            --genomeFastaFiles {input.ref_genome} \
+            --sjdbGTFfile {input.gene_annotation} \
+            2> {log}
+        '''
+
 
 # rule link_fastq_files:
 #     # so that umiextract produces the desired filename
