@@ -6,7 +6,7 @@ min_version('9.0')
 from collections import defaultdict
 from os.path import dirname, basename, join
 import re
-
+import os
 import pandas as pd
 import yaml
 
@@ -32,8 +32,19 @@ if config['pipeline'] not in ('star_umite', 'salmon', 'biscuit_methscan'):
 # if config['pipeline'] == 'salmon' and 'transcriptome' not in config['reference']:
 #     raise ValueError('Salmon pipeline requires "reference - transcriptome" in config file')
 
-config['ilse_info']['metadata'] = config['ilse_info']['metadata'].split()
-config['ilse_info']['fastqdir'] = config['ilse_info']['fastqdir'].split()
+# config['ilse_info']['metadata'] = config['ilse_info']['metadata'].split()
+# config['ilse_info']['fastqdir'] = config['ilse_info']['fastqdir'].split()
+
+# Convert single string paths to lists while keeping existing lists unchanged
+metadata = config["ilse_info"]["metadata"]
+if isinstance(metadata, str):
+    metadata = metadata.split()
+config["ilse_info"]["metadata"] = metadata
+
+fastqdir = config["ilse_info"]["fastqdir"]
+if isinstance(fastqdir, str):
+    fastqdir = fastqdir.split()
+config["ilse_info"]["fastqdir"] = fastqdir
 
 if not config['ilse_info']['metadata']:
     raise ValueError('No metadata file path provided')
@@ -55,29 +66,111 @@ for metadata in config['ilse_info']['metadata']:
     metadata_ext = os.path.splitext(metadata)[-1]
     if metadata_ext == '.xls' or metadata_ext == '.xlsx':
         df_ilse = pd.read_excel(metadata, index_col='Sample Name', dtype=str)
-    elif metadata_ext == '.csv':
+    elif metadata_ext == '.csv': 
         df_ilse = pd.read_csv(metadata, index_col='Sample Name', dtype=str)
     elif metadata_ext == '.tsv':
         df_ilse = pd.read_csv(metadata, sep='\t', index_col='Sample Name', dtype=str)
     else:
-        raise ValueError(f'Unexpected metadata extension "{metadata_ext}".')
+        raise ValueError(
+            f'Unexpected metadata extension "{metadata_ext}".'
+        )
+
+    df_ilse.columns = df_ilse.columns.str.strip()
+
+    if "Unique ID / Lane" not in df_ilse.columns:
+        raise ValueError(
+            f"Missing column 'Unique ID / Lane'. Found: {df_ilse.columns}"
+        )
+
+    # check if regex patterns are provided
+    use_regex = (
+        "samples" in config
+        and config["samples"]
+    )
+
+    # compile regex once
+    if use_regex:
+        patterns = [
+            re.compile(pattern)
+            for pattern in config["samples"]
+        ]
+    
+    # ----------------------------
+    # SAMPLE TO FASTQ MAPPING
+    # ----------------------------
 
     for sample, row in df_ilse.iterrows():
-        fqid = row['Unique ID / Lane']
+
+        fqid = row["Unique ID / Lane"]
+
+        if pd.isna(fqid):
+            continue
+
+        if use_regex:
+
+            matched = False
+
+            for pattern in patterns:
+
+                if pattern.fullmatch(fqid):
+
+                    # keep metadata Sample Name
+                    sample_to_fqid[sample].append(fqid)
+
+                    matched = True
+                    break
+
+
+            if not matched:
+                raise ValueError(
+                    f"FASTQ ID {fqid} did not match any regex pattern"
+                )
+
+
+        else:
+
+            # old behaviour
+            sample_to_fqid[sample].append(fqid)
+
+        # ----------------------------
+        # FIND FASTQ DIRECTORY
+        # ----------------------------
+
         found = False
-        for searchdir in config['ilse_info']['fastqdir']:
+
+        for searchdir in config["ilse_info"]["fastqdir"]:
+
             if fqid in os.listdir(searchdir):
+
                 fqid_to_dir[fqid] = searchdir
-                # sample_to_read1[sample].append(join(searchdir, f'{fqid}/fastq/{fqid}_R1.fastq.gz'))
-                # sample_to_read2[sample].append(join(searchdir, f'{fqid}/fastq/{fqid}_R2.fastq.gz'))
-                sample_to_fqid[sample].append(fqid)
                 found = True
-                break # If we have repeated FASTQ ID, only the first one will be used
+                break
+
+
         if not found:
-            raise ValueError(f'Could not find FASTQ ID {fqid} for sample {sample} in any of the specified directories') 
+
+            raise ValueError(
+                f"Could not find FASTQ ID {fqid} in any of the specified directories"
+            )
+
+    # for sample, row in df_ilse.iterrows():
+    #     fqid = row['Unique ID / Lane']
+    #     found = False
+    #     for searchdir in config['ilse_info']['fastqdir']:
+    #         if fqid in os.listdir(searchdir):
+    #             fqid_to_dir[fqid] = searchdir
+    #             # sample_to_read1[sample].append(join(searchdir, f'{fqid}/fastq/{fqid}_R1.fastq.gz'))
+    #             # sample_to_read2[sample].append(join(searchdir, f'{fqid}/fastq/{fqid}_R2.fastq.gz'))
+    #             sample_to_fqid[sample].append(fqid)
+    #             found = True
+    #             break # If we have repeated FASTQ ID, only the first one will be used
+    #     if not found:
+    #         raise ValueError(f'Could not find FASTQ ID {fqid} for sample {sample} in any of the specified directories') 
 
 
-
+print("sample_to_fqid =", dict(sample_to_fqid))
+print("fqid_to_dir =", fqid_to_dir)
+exit(0)
 
 # fetch rules according to specified pipeline
 include: f'modules/{config['pipeline']}.smk'
