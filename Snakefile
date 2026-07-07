@@ -170,7 +170,7 @@ for metadata in config['ilse_info']['metadata']:
 
 print("sample_to_fqid =", dict(sample_to_fqid))
 print("fqid_to_dir =", fqid_to_dir)
-exit(0)
+
 
 # fetch rules according to specified pipeline
 include: f'modules/{config['pipeline']}.smk'
