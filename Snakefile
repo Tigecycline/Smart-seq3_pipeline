@@ -36,15 +36,15 @@ if config['pipeline'] not in ('star_umite', 'salmon', 'biscuit_methscan'):
 # config['ilse_info']['fastqdir'] = config['ilse_info']['fastqdir'].split()
 
 # Convert single string paths to lists while keeping existing lists unchanged
-metadata = config["ilse_info"]["metadata"]
+metadata = config['ilse_info']['metadata']
 if isinstance(metadata, str):
     metadata = metadata.split()
-config["ilse_info"]["metadata"] = metadata
+config['ilse_info']['metadata'] = metadata
 
-fastqdir = config["ilse_info"]["fastqdir"]
+fastqdir = config['ilse_info']['fastqdir']
 if isinstance(fastqdir, str):
     fastqdir = fastqdir.split()
-config["ilse_info"]["fastqdir"] = fastqdir
+config['ilse_info']['fastqdir'] = fastqdir
 
 if not config['ilse_info']['metadata']:
     raise ValueError('No metadata file path provided')
@@ -62,6 +62,19 @@ for path in paths_to_check:
 sample_to_fqid = defaultdict(list)
 fqid_to_dir = {}
 
+# check if regex patterns are provided
+use_regex = (
+    'samples' in config
+    and config['samples']
+)
+
+# compile regex once
+if use_regex:
+    patterns = [
+        re.compile(pattern)
+        for pattern in config['samples']
+    ]
+
 for metadata in config['ilse_info']['metadata']:
     metadata_ext = os.path.splitext(metadata)[-1]
     if metadata_ext == '.xls' or metadata_ext == '.xlsx':
@@ -77,23 +90,10 @@ for metadata in config['ilse_info']['metadata']:
 
     df_ilse.columns = df_ilse.columns.str.strip()
 
-    if "Unique ID / Lane" not in df_ilse.columns:
+    if 'Unique ID / Lane' not in df_ilse.columns:
         raise ValueError(
             f"Missing column 'Unique ID / Lane'. Found: {df_ilse.columns}"
         )
-
-    # check if regex patterns are provided
-    use_regex = (
-        "samples" in config
-        and config["samples"]
-    )
-
-    # compile regex once
-    if use_regex:
-        patterns = [
-            re.compile(pattern)
-            for pattern in config["samples"]
-        ]
     
     # ----------------------------
     # SAMPLE TO FASTQ MAPPING
@@ -101,36 +101,17 @@ for metadata in config['ilse_info']['metadata']:
 
     for sample, row in df_ilse.iterrows():
 
-        fqid = row["Unique ID / Lane"]
+        fqid = row['Unique ID / Lane']
 
         if pd.isna(fqid):
             continue
 
-        if use_regex:
-
-            matched = False
-
-            for pattern in patterns:
-
-                if pattern.fullmatch(fqid):
-
-                    # keep metadata Sample Name
-                    sample_to_fqid[sample].append(fqid)
-
-                    matched = True
-                    break
-
-
-            if not matched:
-                raise ValueError(
-                    f"FASTQ ID {fqid} did not match any regex pattern"
-                )
-
-
-        else:
-
-            # old behaviour
+        if not use_regex or any(pattern.fullmatch(str(sample)) for pattern in patterns):
             sample_to_fqid[sample].append(fqid)
+        else:
+            raise ValueError(
+                f"Sample name '{sample}' did not match any provided regex patterns"
+            )
 
         # ----------------------------
         # FIND FASTQ DIRECTORY
@@ -138,7 +119,7 @@ for metadata in config['ilse_info']['metadata']:
 
         found = False
 
-        for searchdir in config["ilse_info"]["fastqdir"]:
+        for searchdir in config['ilse_info']['fastqdir']:
 
             if fqid in os.listdir(searchdir):
 
@@ -148,7 +129,6 @@ for metadata in config['ilse_info']['metadata']:
 
 
         if not found:
-
             raise ValueError(
                 f"Could not find FASTQ ID {fqid} in any of the specified directories"
             )
