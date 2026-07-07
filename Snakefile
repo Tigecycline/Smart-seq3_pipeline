@@ -106,12 +106,11 @@ for metadata in config['ilse_info']['metadata']:
         if pd.isna(fqid):
             continue
 
-        if not use_regex or any(pattern.fullmatch(str(sample)) for pattern in patterns):
-            sample_to_fqid[sample].append(fqid)
-        else:
-            raise ValueError(
-                f"Sample name '{sample}' did not match any provided regex patterns"
-            )
+        # Include only samples matching regex (if provided)
+        if use_regex and not any(pattern.fullmatch(str(sample)) for pattern in patterns):
+            continue
+
+        sample_to_fqid[sample].append(fqid)
 
         # ----------------------------
         # FIND FASTQ DIRECTORY
@@ -150,7 +149,6 @@ for metadata in config['ilse_info']['metadata']:
 
 print("sample_to_fqid =", dict(sample_to_fqid))
 print("fqid_to_dir =", fqid_to_dir)
-
 
 # fetch rules according to specified pipeline
 include: f'modules/{config['pipeline']}.smk'
