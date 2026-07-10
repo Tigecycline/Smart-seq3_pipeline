@@ -1,8 +1,8 @@
 rule fix_gtf_exon_ids:
     input:
-        gtf = config['reference']['genes']
+        ancient(config['reference']['genes'])
     output:
-        gtf = join(config['outdir'], 'reference', 'genes_with_exon_id.gtf')
+        join(dirname(config['reference']['genes']), 'genes_with_exon_id.gtf')
     run:
         import os
 
@@ -59,10 +59,11 @@ rule fix_gtf_exon_ids:
         with open(output.gtf, "w") as f:
             f.writelines(processed_lines)
 
+
 rule prepare_star_indices:
     input:
         ref_genome = ancient(config['reference']['genome']),
-        gene_annotation = ancient(rules.fix_gtf_exon_ids.output.gtf)
+        gene_annotation = ancient(rules.fix_gtf_exon_ids.output)
     output:
         # use specified star index directory if available, otherwise default to a subdirectory next to genome fasta
         directory(join(dirname(config['reference']['genome']), 'star_index'))
@@ -191,7 +192,7 @@ rule sort_bam_by_query_name:
 
 rule parse_dump_GTF:
     input:
-        ancient(rules.fix_gtf_exon_ids.output.gtf)
+        temp(rules.fix_gtf_exon_ids.output)
     output:
         join(dirname(config['reference']['genes']), 'umicount_GTF_dump.pkl')
     conda: '../envs/umite.yaml'
