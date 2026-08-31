@@ -1,8 +1,17 @@
 # You can copy-paste these sections to snakeconfig.yaml and modify them there
 # Any section that is in snakeconfig.yaml will overwrite the one here
+# If you want to change a section you must copy it entirely in the snakeconfig.yaml 
+# file, even arguments you are not changing
 
+# Choose between star_umite or salmon for transcriptomic data and biscuit_methscan for genomic
 pipeline: star_umite
 
+# Set arguments for umiextract 
+# umilen: length of umi in your library preparation
+# anchor: anchor sequence preceding the umi 
+# trailing: sequence after UMI
+# search region: size of search interval from start of a read to find the umi
+# fuzzy umi: allow fuzzy umi alignment to permit minor replication errors
 umiextract_args: >-
   --umilen 8
   --anchor "ATTGCGCAATG"
@@ -10,28 +19,47 @@ umiextract_args: >-
   --search_region 30
   --fuzzy_umi
 
+# Set arguments for umicount 
+# mm_count_primary: count primary alignment (BAM flag 0x100) for multimapping reads
+# UMI_correct: Allows minor misalignments when matching UMIs 
 umicount_args: >-
   --mm_count_primary
   --UMI_correct
 
+# Star index building parameters
+# limitGenomeGenerateRAM: Maximum RAM this process can occupy
 star_index_args: >-
   --limitGenomeGenerateRAM 100000000000
 
+# Star Alignment parameters
+# clip3pAdapterSeq Sequencing adapter sequences 
+# clip3pAdapterMMp: fraction of mismatch allowed in Adapter sequences
+# readFilesCommand: tautological
+# outSAMtype: output file type, don't change 
 star_align_args: >-
   --clip3pAdapterSeq CTGTCTCTTATACACATCT CTGTCTCTTATACACATCT
   --clip3pAdapterMMp 0.1 0.1
   --readFilesCommand zcat
   --outSAMtype BAM Unsorted
 
+# Salmon indexing parameters
+# k: kmer size for index building, 31 is a good default 
 salmon_index_args: >-
   -k 31
 
+# Salmon quantific parameters
+# -l: library type, I (Inward), S (Stranded), F (Read1 is Forward) (see https://salmon.readthedocs.io/en/latest/library_type.html)
 salmon_quant_args: >-
   -l ISF
 
+# Biscuit genome index parameters
+# -a: Algorithm used to build the index, bwtsw is default, for very small genomes use div
 biscuit_index_alg: >-
   -a bwtsw
 
+# Biscuit alignment index parameters
+# -T: Minimum score to output
+# -k: Minimum seed length
 biscuit_align_args: >-
   -T 30
   -k 19
