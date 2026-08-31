@@ -74,6 +74,7 @@ if use_regex:
         re.compile(pattern)
         for pattern in config['samples']
     ]
+print(patterns)
 
 for metadata in config['ilse_info']['metadata']:
     metadata_ext = os.path.splitext(metadata)[-1]

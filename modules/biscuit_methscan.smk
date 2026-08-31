@@ -13,9 +13,10 @@ rule prepare_biscuit_index:
         directory(join(dirname(config['reference']['genome']), 'biscuit_index'))
     params:
         prefix = join(dirname(config['reference']['genome']), 'biscuit_index', basename(config['reference']['genome']).removesuffix('.gz').removesuffix('.bgz'))
+        alg = config['biscuit_index_alg']
     conda: '../envs/biscuit.yaml'
     shell:
-        'biscuit index {input} -p {params.prefix}'
+        'biscuit index {input} -p {params.prefix} {params.alg}'
 
 
 rule trim_adaptors:
@@ -38,12 +39,13 @@ rule align_to_ref:
     output:
         temp(join(config['outdir'], 'biscuit/{sample}/{sample}.biscuit_aligned.bam'))
     params:
-        base = rules.prepare_biscuit_index.params.prefix
+        base = rules.prepare_biscuit_index.params.prefix,
+        biscuit_args = config['biscuit_align_args']
     log: join(config['outdir'], 'biscuit/{sample}/{sample}.biscuit_align.log')
-    threads: workflow.cores #min(4, workflow.cores) 
+    threads: min(4, workflow.cores) 
     conda: '../envs/biscuit.yaml'
     shell:
-        'biscuit align -@ {threads} {params.base} {input.trimmed_reads} 2> {log} | samtools view -b -o {output}'
+        'biscuit align -@ {threads} {params.base} {params.biscuit_args} {input.trimmed_reads} 2> {log} | samtools view -b -o {output}'
 
 
 rule deduplicate_and_sort_bam:

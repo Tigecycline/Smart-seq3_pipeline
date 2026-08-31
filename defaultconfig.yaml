@@ -28,3 +28,10 @@ salmon_index_args: >-
 
 salmon_quant_args: >-
   -l ISF
+
+biscuit_index_alg: >-
+  -a bwtsw
+
+biscuit_align_args: >-
+  -T 30
+  -k 19
